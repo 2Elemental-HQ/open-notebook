@@ -1,0 +1,10 @@
+# Small derivative of the exact version deployed by this fork.
+# The base image retains its LICENSE and all third-party notices.
+FROM lfnovo/open_notebook:1.14.0
+WORKDIR /app
+RUN /app/.venv/bin/python -c "from importlib.metadata import version; assert version('open-notebook') == '1.14.0'; assert version('content-core') == '2.0.4'"
+COPY open_notebook/utils/remote_docling.py /app/open_notebook/utils/remote_docling.py
+COPY open_notebook/utils/runtime_capabilities.py /app/open_notebook/utils/runtime_capabilities.py
+COPY open_notebook/graphs/source.py /app/open_notebook/graphs/source.py
+COPY api/routers/sources.py /app/api/routers/sources.py
+ENV OPEN_NOTEBOOK_ENABLE_DOCLING=false
