@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from typing import Any, List, Optional
 
-from content_core import check_file_support
 from fastapi import (
     APIRouter,
     Depends,
@@ -42,6 +41,7 @@ from open_notebook.exceptions import (
     OpenNotebookError,
     UnsupportedTypeException,
 )
+from open_notebook.utils.remote_docling import check_file_support
 
 router = APIRouter()
 

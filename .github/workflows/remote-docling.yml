@@ -1,0 +1,52 @@
+name: Remote Docling image
+
+on:
+  pull_request:
+    branches: ['release/1.14.0']
+  push:
+    tags: ['docling-1.14.0-*']
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v8.1.0
+      - run: uv sync --frozen --group dev
+      - run: uv run --frozen pytest tests/test_remote_docling.py tests/test_runtime_capabilities.py tests/test_capabilities_api.py tests/test_graphs.py tests/test_upload_type_mitigations.py -q
+      - run: uv run --frozen ruff check open_notebook/utils/remote_docling.py open_notebook/utils/runtime_capabilities.py open_notebook/graphs/source.py api/routers/sources.py tests/test_remote_docling.py
+
+  image:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_SHA}" >> "$GITHUB_ENV"
+      - name: Build derivative
+        run: docker build -f Dockerfile.remote-docling -t "$IMAGE" .
+      - name: Check API and worker imports without local Docling
+        run: |
+          docker run --rm --entrypoint /app/.venv/bin/python \
+            -e DOCLING_SERVE_URL=http://docling:5001 "$IMAGE" \
+            -c 'from open_notebook.utils.runtime_capabilities import docling_available; from open_notebook.graphs.source import content_process; from api.routers.sources import _assert_file_supported; assert docling_available()'
+      - name: Log in to GHCR
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish reviewed release tag
+        if: github.event_name == 'push'
+        run: |
+          docker push "$IMAGE"
+          RELEASE_IMAGE="ghcr.io/${GITHUB_REPOSITORY,,}:${GITHUB_REF_NAME}"
+          docker tag "$IMAGE" "$RELEASE_IMAGE"
+          docker push "$RELEASE_IMAGE"

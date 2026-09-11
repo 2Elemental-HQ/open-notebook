@@ -22,7 +22,11 @@ from loguru import logger
 
 
 def docling_available() -> bool:
-    """True when Docling is installed (its document engine, OCR and image sources work)."""
+    """True when local Docling is installed or a remote endpoint is configured."""
+    from open_notebook.utils.remote_docling import remote_docling_configured
+
+    if remote_docling_configured():
+        return True
     try:
         # content-core's own routing gate — the authoritative signal, not just a spec check.
         from content_core.extraction import DOCLING_AVAILABLE
