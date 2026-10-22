@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
 import content_core as cc
-from content_core import ContentCoreConfig, extract_content
+from content_core import ContentCoreConfig
 from content_core.common import ExtractionOutput
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
@@ -17,6 +17,7 @@ from open_notebook.domain.content_settings import ContentSettings
 from open_notebook.domain.notebook import Asset, Source
 from open_notebook.domain.transformation import Transformation
 from open_notebook.graphs.transformation import graph as transform_graph
+from open_notebook.utils.remote_docling import extract_content
 from open_notebook.utils.runtime_capabilities import engine_runtime_missing
 
 # content-core >= 2.1 disables its own Loguru logging for library consumers.
